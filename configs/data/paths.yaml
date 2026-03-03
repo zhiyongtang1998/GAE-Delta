@@ -1,0 +1,4 @@
+hdf5_path: ${oc.env:GAE_DELTA_DATA_PATH,data/example/toy_demo.h5}
+fi_network_path: ${oc.env:GAE_DELTA_FI_PATH,data/example/toy_fi_network.txt}
+output_dir: ${oc.env:GAE_DELTA_OUTPUT_DIR,outputs}
+cache_dir: ${oc.env:GAE_DELTA_CACHE_DIR,.cache}

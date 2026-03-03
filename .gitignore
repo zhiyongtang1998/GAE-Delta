@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Cython build artifacts
+*.c
+!csrc/src/*.cpp
+*.so
+*.dylib
+*.pyd
+
+# C++ build
+csrc/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Hydra outputs
+outputs/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (keep example only)
+data/*
+!data/example/
+
+# Environment
+.env

@@ -1,0 +1,13 @@
+encoder:
+  in_channels: 4
+  hidden_channels: 32
+  out_channels: 16
+  dropout: 0.3
+
+training:
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  max_epochs: 300
+  patience: 30
+  val_edge_ratio: 0.1
+  neg_sampling_ratio: 1.0

@@ -1,0 +1,12 @@
+architecture:
+  input_dim: 48  # 3 modalities × 16 embedding dim
+  hidden_dim: 64
+  output_dim: 1
+  dropout: 0.3
+
+training:
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  max_epochs: 200
+  patience: 20
+  batch_size: 32

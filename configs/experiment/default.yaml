@@ -1,0 +1,19 @@
+graph:
+  pcc_threshold: 0.5
+  min_node_degree: 1
+
+shift:
+  knn_k: 5
+  normalize_embeddings: true
+
+selection:
+  method: isolation_forest
+  n_estimators: 500
+  max_samples: 256
+  contamination: auto
+  random_state: 42
+
+cross_validation:
+  n_folds: 10
+  stratified: true
+  train_val_split: 0.8
