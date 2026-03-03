@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def knn_residual_correction(
     raw_shifts: np.ndarray,
-    k: int = 5,
+    k: int = 15,
 ) -> np.ndarray:
     """Apply KNN residual correction to raw embedding shifts.
 

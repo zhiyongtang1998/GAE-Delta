@@ -1,4 +1,4 @@
-"""Stage 2: Outcome-specific graph construction."""
+"""Stage 2: Group-specific graph construction."""
 from __future__ import annotations
 
 import logging
@@ -19,7 +19,7 @@ def run_stage2(
     modality: str,
     pcc_threshold: float = 0.5,
 ) -> Tuple[OutcomeGraph, OutcomeGraph]:
-    """Build outcome-specific graphs for a single modality.
+    """Build group-specific graphs for a single modality.
 
     Returns
     -------

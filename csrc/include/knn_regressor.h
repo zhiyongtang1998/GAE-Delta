@@ -20,7 +20,7 @@ namespace gae_delta {
  */
 class KNNRegressor {
 public:
-    KNNRegressor(int k = 5) : k_(k) {}
+    KNNRegressor(int k = 15) : k_(k) {}
 
     /**
      * Smooth shift vectors via KNN regression and return residuals.

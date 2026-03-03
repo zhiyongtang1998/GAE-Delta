@@ -18,10 +18,10 @@ def run_stage3(
     graph_good: OutcomeGraph,
     graph_poor: OutcomeGraph,
     gae_cfg: dict,
-    knn_k: int = 5,
+    knn_k: int = 15,
     device: str = "cpu",
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Train GAEs on outcome-specific graphs and compute residual shifts.
+    """Train GAEs on group-specific graphs and compute residual shifts.
 
     Returns
     -------

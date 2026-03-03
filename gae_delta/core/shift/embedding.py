@@ -1,4 +1,4 @@
-"""Embedding normalization and outcome-specific shift computation."""
+"""Embedding normalization and phenotype-specific shift computation."""
 from __future__ import annotations
 
 import numpy as np

@@ -2,9 +2,9 @@
 
 # 🧬 GAE-Δ
 
-**Graph Autoencoder-Delta**
+**Phenotype-Specific Gene Role Shifts in Multi-Omics Data via Graph Autoencoder Embedding Differences**
 
-*Decoding how gene networks rewire between good and poor cancer outcomes*
+*When genes don't change expression — but change who they talk to*
 
 [![Python 3.9](https://img.shields.io/badge/Python-3.9-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch 1.13](https://img.shields.io/badge/PyTorch-1.13-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
@@ -17,17 +17,19 @@
 
 ## 💡 What is GAE-Δ?
 
-Most cancer prognostic methods ask: *"Which genes are differentially expressed?"*
+Most multi-omics methods ask: *"Which genes are differentially expressed between phenotypes?"*
 
-**GAE-Δ asks a different question:** *"Which genes change their network roles between good and poor outcomes?"*
+**GAE-Δ asks a different question:** *"Which genes change their network roles between phenotypic groups?"*
 
-We train separate graph autoencoders on outcome-specific gene interaction networks, then compute **embedding shifts** — capturing how each gene's functional context reorganizes with clinical outcome. This isn't about expression changes; it's about **network rewiring**.
+We train separate graph autoencoders on **group-specific** gene interaction networks, then compute **embedding differences** — capturing how each gene's functional context reorganizes across phenotypic conditions. This isn't about expression changes; it's about **network rewiring**.
+
+GAE-Δ is a general framework applicable to any binary stratification of multi-omics cohorts — survival outcomes, treatment response, disease subtypes, or any clinically meaningful grouping.
 
 <div align="center">
 
 ```
   ┌─────────────┐         ┌─────────────┐
-  │  Good-Outcome│         │ Poor-Outcome │
+  │   Group A    │         │   Group B    │
   │  Gene Graph  │         │  Gene Graph  │
   └──────┬──────┘         └──────┬──────┘
          │                       │
@@ -36,29 +38,29 @@ We train separate graph autoencoders on outcome-specific gene interaction networ
     │ Encoder │             │ Encoder │
     └────┬────┘             └────┬────┘
          │                       │
-    z_good ∈ ℝ^16          z_poor ∈ ℝ^16
+      z_A ∈ ℝ^d              z_B ∈ ℝ^d
          │                       │
          └──────────┬────────────┘
                     │
-              Δz = z_poor − z_good
+              Δz = z_B − z_A
                     │
               ┌─────▼─────┐
               │    KNN     │
               │  Residual  │
               └─────┬─────┘
                     │
-         ε_g ∈ ℝ^16 (per gene, per omics)
+         ε_g ∈ ℝ^d (per gene, per omics)
                     │
          ┌──────────┼──────────┐
          RNA      Meth       CNV
          │         │          │
          └─────────┼──────────┘
                    │
-            s_g ∈ ℝ^48 (fused)
+           s_g ∈ ℝ^(3d) (fused)
                    │
            ┌───────▼───────┐
            │ Isolation      │
-           │ Forest (top100)│
+           │ Forest (top-N) │
            └───────┬───────┘
                    │
            ┌───────▼───────┐
@@ -71,11 +73,11 @@ We train separate graph autoencoders on outcome-specific gene interaction networ
 
 ## 🔬 Key Features
 
-- **Outcome-specific graph learning** — separate GAEs for good vs. poor prognosis, not a single static graph
-- **Embedding shift as biomarker** — gene-level network reorganization, not just expression fold-change
-- **Multi-omics late fusion** — RNA-seq, DNA methylation, CNV integrated at the shift level
-- **KNN residual correction** — removes global smooth trends, highlights atypical rewiring
-- **Isolation Forest gene selection** — unsupervised anomaly detection on 48D shift space
+- **Phenotype-specific graph learning** — separate GAEs for each group, capturing group-specific gene interaction topology
+- **Embedding difference as biomarker** — gene-level network reorganization, not just expression fold-change
+- **Multi-omics late fusion** — RNA-seq, DNA methylation, CNV integrated at the embedding-shift level
+- **KNN residual correction** — removes globally smooth trends, highlights genes with atypical rewiring
+- **Isolation Forest gene selection** — unsupervised anomaly detection on fused shift space
 - **Cython + C++ accelerated** — performance-critical PCC computation and KNN in compiled extensions
 
 ## ⚡ Quick Start
@@ -183,12 +185,14 @@ make test
 If you use GAE-Δ in your research, please cite:
 
 ```bibtex
-@article{gaedelta2024,
-  title={GAE-Δ: A Graph Autoencoder-based Framework for Characterizing
-         Outcome-Specific Gene Role Shifts in Multi-Omics Cancer Data},
-  author={},
-  journal={},
-  year={2024}
+@article{tang2026gaedelta,
+  title={GAE-$\Delta$: Phenotype-Specific Gene Role Shifts in Multi-Omics
+         Data via Graph Autoencoder Embedding Differences},
+  author={Tang, Zhiyong and Chen, Zhe and Chen, Mengting and Ewing, Rob
+          and Niranjan, Mahesan and Ennis, Sarah and Wang, Yihua},
+  journal={Bioinformatics},
+  year={2026},
+  publisher={Oxford University Press}
 }
 ```
 

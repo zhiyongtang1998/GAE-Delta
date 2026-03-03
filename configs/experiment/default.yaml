@@ -3,7 +3,7 @@ graph:
   min_node_degree: 1
 
 shift:
-  knn_k: 5
+  knn_k: 15
   normalize_embeddings: true
 
 selection:

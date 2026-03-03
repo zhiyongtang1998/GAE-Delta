@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class OutcomeGAE(nn.Module):
-    """Graph Autoencoder for learning outcome-specific gene embeddings.
+    """Graph Autoencoder for learning group-specific gene embeddings.
 
     Combines a GCN encoder with an inner-product decoder, trained to
     reconstruct edges via binary cross-entropy loss.

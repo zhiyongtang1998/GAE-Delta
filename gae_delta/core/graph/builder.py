@@ -1,4 +1,4 @@
-"""Outcome-specific graph builder: orchestrates PCC computation, FI filtering, and feature construction."""
+"""Group-specific graph builder: orchestrates PCC computation, FI filtering, and feature construction."""
 from __future__ import annotations
 
 import logging
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class OutcomeGraph:
-    """A single outcome-specific gene interaction graph."""
+    """A single group-specific gene interaction graph."""
     edge_index: torch.LongTensor   # (2, n_edges)
     edge_weight: torch.FloatTensor  # (n_edges,)
     node_features: torch.FloatTensor  # (n_genes, 4)
@@ -23,9 +23,9 @@ class OutcomeGraph:
 
 
 class OutcomeGraphBuilder:
-    """Build FI-constrained outcome-specific gene graphs.
+    """Build FI-constrained group-specific gene graphs.
 
-    For each (modality, outcome_group), the builder:
+    For each (modality, phenotypic_group), the builder:
     1. Computes pairwise Pearson correlations among genes (Cython-accelerated)
     2. Filters edges by FI prior and |PCC| > threshold
     3. Constructs 4D node features
@@ -52,7 +52,7 @@ class OutcomeGraphBuilder:
         outcome_label: str,
         modality: str,
     ) -> OutcomeGraph:
-        """Build one outcome-specific graph.
+        """Build one group-specific graph.
 
         Parameters
         ----------

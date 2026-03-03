@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gae-delta"
 dynamic = ["version"]
-description = "GAE-Δ: Graph Autoencoder-based framework for outcome-specific gene role shifts in multi-omics cancer data"
+description = "GAE-Δ: Phenotype-specific gene role shifts in multi-omics data via graph autoencoder embedding differences"
 readme = "README.md"
 license = {text = "CC-BY-NC-ND-4.0"}
 requires-python = ">=3.9,<3.10"

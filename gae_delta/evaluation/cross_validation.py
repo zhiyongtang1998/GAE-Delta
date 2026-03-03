@@ -61,7 +61,7 @@ def run_cross_validation(
     n_folds: int = 10,
     n_top_genes: int = 100,
     pcc_threshold: float = 0.5,
-    knn_k: int = 5,
+    knn_k: int = 15,
     gae_cfg: Optional[dict] = None,
     mlp_cfg: Optional[dict] = None,
     device: str = "cpu",
@@ -119,7 +119,7 @@ def run_cross_validation(
             omics_data = preprocessed[mod_name]
             n_genes = omics_data.shape[1]
 
-            # Build outcome-specific graphs
+            # Build group-specific graphs
             builder = OutcomeGraphBuilder(fi_edges, pcc_threshold)
             graph_good = builder.build(omics_data, good_train_mask, "good", mod_name)
             graph_poor = builder.build(omics_data, poor_train_mask, "poor", mod_name)

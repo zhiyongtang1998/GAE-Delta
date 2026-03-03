@@ -19,7 +19,7 @@ def select_shift_genes(
     contamination: str | float = "auto",
     random_state: int = 42,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Select genes with pronounced outcome-specific role shifts using Isolation Forest.
+    """Select genes with pronounced phenotype-specific role shifts using Isolation Forest.
 
     Genes are ranked by anomaly score (more anomalous = more distinctive shift).
 

@@ -1,4 +1,4 @@
-"""4D node feature computation for outcome-specific graphs."""
+"""4D node feature computation for group-specific graphs."""
 from __future__ import annotations
 
 import numpy as np

@@ -78,7 +78,7 @@ def main(cfg: DictConfig) -> None:
     n_folds = cfg.get("n_folds", 10)
     n_top_genes = cfg.get("n_top_genes", 100)
     pcc_threshold = exp_cfg.get("graph", {}).get("pcc_threshold", 0.5)
-    knn_k = exp_cfg.get("shift", {}).get("knn_k", 5)
+    knn_k = exp_cfg.get("shift", {}).get("knn_k", 15)
 
     # Run cross-validation
     cv_result = run_cross_validation(
