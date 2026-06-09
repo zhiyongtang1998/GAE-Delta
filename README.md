@@ -9,7 +9,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch 2.x](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![PyG 2.5+](https://img.shields.io/badge/PyG-2.5+-3C2179?logo=pyg&logoColor=white)](https://pyg.org/)
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
@@ -125,6 +125,34 @@ gae-delta \
     device=auto
 ```
 
+### Use as a Python library
+
+After `pip install gae-delta`, call the framework directly from your own code:
+
+```python
+from gae_delta import (
+    run_cross_validation,      # full 10-fold pipeline (Algorithm 1)
+    compute_embedding_shift,   # Δz between two group embeddings
+    knn_residual_correction,   # remove globally smooth trends
+    fuse_multiomics_shifts,    # late-fusion of per-omics shifts
+    select_shift_genes,        # Isolation-Forest gene ranking
+    OutcomeGraphBuilder,       # FI-constrained group graph builder
+    MultiOmicsDataset,         # HDF5 multi-omics loader
+)
+
+# End-to-end: dataset + FI network in, cross-validated result out
+result = run_cross_validation(dataset, fi_edges, n_folds=10, n_top_genes=100)
+print(result.summary())        # e.g. "AUC: 0.71 ± 0.05 | F1: 0.68 ± 0.06"
+
+# …or compose the building blocks for your own analysis
+shift    = compute_embedding_shift(z_good, z_poor, normalize=True)
+residual = knn_residual_correction(shift, k=15)
+top_idx, scores = select_shift_genes(fused_shifts, n_top=100)
+```
+
+> The public API is imported lazily, so `import gae_delta` stays fast and does
+> not pull in PyTorch until you actually call a model-backed entry point.
+
 ## 📂 Project Structure
 
 ```
@@ -201,4 +229,4 @@ If you use GAE-Δ in your research, please cite:
 
 ## 📄 License
 
-This project is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/). You may share the material with attribution, but commercial use and derivative works are not permitted.
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) — free to use, modify, and redistribute with attribution.
