@@ -19,8 +19,10 @@ def preprocess_rna(
     -------
     Normalized expression matrix (n_patients, n_genes).
     """
-    # log2(x + 1) — safe for already-transformed data
-    x = np.log2(expression + 1.0).astype(np.float32)
+    # log2(x + 1) — safe for already-transformed data; clip negatives first
+    x_in = np.where(np.isfinite(expression), expression, 0.0)
+    x_in = np.clip(x_in, a_min=0.0, a_max=None)
+    x = np.log2(x_in + 1.0).astype(np.float32)
 
     # z-score using training statistics
     train_data = x[train_mask]
@@ -29,4 +31,4 @@ def preprocess_rna(
     sigma[sigma < 1e-8] = 1.0  # avoid division by zero
 
     x = (x - mu) / sigma
-    return x
+    return np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)

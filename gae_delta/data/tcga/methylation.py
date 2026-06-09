@@ -7,7 +7,7 @@ import numpy as np
 def preprocess_methylation(
     beta_values: np.ndarray,
     train_mask: np.ndarray,
-    variance_threshold: float = 0.01,
+    variance_threshold: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Preprocess methylation beta values.
 
@@ -26,6 +26,7 @@ def preprocess_methylation(
     normalized : (n_patients, n_retained_genes)
     gene_mask : boolean mask of retained genes (n_genes,)
     """
+    beta_values = np.nan_to_num(beta_values, nan=0.5, posinf=1.0, neginf=0.0)
     train_data = beta_values[train_mask]
 
     # variance filtering on training data
@@ -42,4 +43,5 @@ def preprocess_methylation(
     sigma[sigma < 1e-8] = 1.0
 
     normalized = (filtered - mu) / sigma
+    normalized = np.nan_to_num(normalized, nan=0.0, posinf=0.0, neginf=0.0)
     return normalized, gene_mask

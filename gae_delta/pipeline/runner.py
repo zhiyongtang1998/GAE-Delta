@@ -79,6 +79,11 @@ def main(cfg: DictConfig) -> None:
     n_top_genes = cfg.get("n_top_genes", 100)
     pcc_threshold = exp_cfg.get("graph", {}).get("pcc_threshold", 0.5)
     knn_k = exp_cfg.get("shift", {}).get("knn_k", 15)
+    shared_encoder = bool(exp_cfg.get("shift", {}).get("shared_encoder", False))
+    skip_knn = bool(exp_cfg.get("shift", {}).get("skip_knn", False))
+    nonneg_embedding = bool(exp_cfg.get("shift", {}).get("nonneg_embedding", False))
+    use_fisher_z = bool(exp_cfg.get("graph", {}).get("use_fisher_z", False))
+    fisher_q = float(exp_cfg.get("graph", {}).get("fisher_q", 0.1))
 
     # Run cross-validation
     cv_result = run_cross_validation(
@@ -93,6 +98,11 @@ def main(cfg: DictConfig) -> None:
         mlp_cfg=mlp_cfg,
         device=device,
         seed=seed,
+        shared_encoder=shared_encoder,
+        skip_knn=skip_knn,
+        use_fisher_z=use_fisher_z,
+        fisher_q=fisher_q,
+        nonneg_embedding=nonneg_embedding,
     )
 
     # Save results
@@ -102,6 +112,8 @@ def main(cfg: DictConfig) -> None:
         "std_auc": cv_result.std_auc,
         "fold_aucs": [m.auc_roc for m in cv_result.fold_metrics],
         "fold_f1s": [m.f1 for m in cv_result.fold_metrics],
+        "fold_selected_indices": cv_result.fold_selected_indices,
+        "gene_universe": [g.decode() if isinstance(g, bytes) else g for g in dataset.gene_universe],
         "summary": cv_result.summary(),
     }
     save_results(results, Path(output_dir) / "cv_results.json")

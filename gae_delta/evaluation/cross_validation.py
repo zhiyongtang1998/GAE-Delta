@@ -15,7 +15,7 @@ from gae_delta.data.tcga.methylation import preprocess_methylation
 from gae_delta.data.tcga.cnv import preprocess_cnv
 from gae_delta.data.network.reactome_fi import build_gene_to_index, fi_edges_to_index_pairs
 from gae_delta.core.graph.builder import OutcomeGraphBuilder
-from gae_delta.core.model.gae import OutcomeGAE, train_gae
+from gae_delta.core.model.gae import OutcomeGAE, train_gae, train_shared_gae
 from gae_delta.core.model.mlp import OutcomeClassifier, train_classifier
 from gae_delta.core.shift.embedding import compute_embedding_shift
 from gae_delta.core.shift.knn_residual import knn_residual_correction
@@ -36,6 +36,7 @@ PREPROCESS_FN = {
 class CVResult:
     """Cross-validation results across all folds."""
     fold_metrics: List[ClassificationMetrics] = field(default_factory=list)
+    fold_selected_indices: List[List[int]] = field(default_factory=list)
 
     @property
     def mean_auc(self) -> float:
@@ -66,6 +67,11 @@ def run_cross_validation(
     mlp_cfg: Optional[dict] = None,
     device: str = "cpu",
     seed: int = 42,
+    shared_encoder: bool = False,
+    skip_knn: bool = False,
+    use_fisher_z: bool = False,
+    fisher_q: float = 0.1,
+    nonneg_embedding: bool = False,
 ) -> CVResult:
     """Run full GAE-Δ cross-validation pipeline.
 
@@ -119,45 +125,81 @@ def run_cross_validation(
             omics_data = preprocessed[mod_name]
             n_genes = omics_data.shape[1]
 
+            # Optional A2: filter FI edges by Fisher's z test for differential correlation
+            if use_fisher_z:
+                from gae_delta.core.graph.fisher_z import fisher_z_differential_edges
+                fi_edges_mod = fisher_z_differential_edges(
+                    fi_edges, omics_data,
+                    good_train_mask, poor_train_mask,
+                    q_threshold=fisher_q,
+                )
+            else:
+                fi_edges_mod = fi_edges
+
             # Build group-specific graphs
-            builder = OutcomeGraphBuilder(fi_edges, pcc_threshold)
+            builder = OutcomeGraphBuilder(fi_edges_mod, pcc_threshold)
             graph_good = builder.build(omics_data, good_train_mask, "good", mod_name)
             graph_poor = builder.build(omics_data, poor_train_mask, "poor", mod_name)
 
-            # Train GAEs
-            gae_good = OutcomeGAE(
-                in_channels=4,
-                hidden_channels=gae_cfg.get("hidden_channels", 32),
-                out_channels=embedding_dim,
-                dropout=gae_cfg.get("dropout", 0.3),
-            )
-            gae_poor = OutcomeGAE(
-                in_channels=4,
-                hidden_channels=gae_cfg.get("hidden_channels", 32),
-                out_channels=embedding_dim,
-                dropout=gae_cfg.get("dropout", 0.3),
-            )
+            # Train GAE(s)
+            if shared_encoder:
+                gae = OutcomeGAE(
+                    in_channels=4,
+                    hidden_channels=gae_cfg.get("hidden_channels", 32),
+                    out_channels=embedding_dim,
+                    dropout=gae_cfg.get("dropout", 0.3),
+                )
+                _, z_good, z_poor = train_shared_gae(
+                    gae,
+                    graph_good.node_features, graph_good.edge_index,
+                    graph_poor.node_features, graph_poor.edge_index,
+                    lr=gae_cfg.get("lr", 1e-3),
+                    weight_decay=gae_cfg.get("weight_decay", 1e-4),
+                    max_epochs=gae_cfg.get("max_epochs", 300),
+                    patience=gae_cfg.get("patience", 30),
+                    device=device,
+                )
+            else:
+                gae_good = OutcomeGAE(
+                    in_channels=4,
+                    hidden_channels=gae_cfg.get("hidden_channels", 32),
+                    out_channels=embedding_dim,
+                    dropout=gae_cfg.get("dropout", 0.3),
+                )
+                gae_poor = OutcomeGAE(
+                    in_channels=4,
+                    hidden_channels=gae_cfg.get("hidden_channels", 32),
+                    out_channels=embedding_dim,
+                    dropout=gae_cfg.get("dropout", 0.3),
+                )
+                _, z_good = train_gae(
+                    gae_good, graph_good.node_features, graph_good.edge_index,
+                    lr=gae_cfg.get("lr", 1e-3),
+                    weight_decay=gae_cfg.get("weight_decay", 1e-4),
+                    max_epochs=gae_cfg.get("max_epochs", 300),
+                    patience=gae_cfg.get("patience", 30),
+                    device=device,
+                )
+                _, z_poor = train_gae(
+                    gae_poor, graph_poor.node_features, graph_poor.edge_index,
+                    lr=gae_cfg.get("lr", 1e-3),
+                    weight_decay=gae_cfg.get("weight_decay", 1e-4),
+                    max_epochs=gae_cfg.get("max_epochs", 300),
+                    patience=gae_cfg.get("patience", 30),
+                    device=device,
+                )
 
-            _, z_good = train_gae(
-                gae_good, graph_good.node_features, graph_good.edge_index,
-                lr=gae_cfg.get("lr", 1e-3),
-                weight_decay=gae_cfg.get("weight_decay", 1e-4),
-                max_epochs=gae_cfg.get("max_epochs", 300),
-                patience=gae_cfg.get("patience", 30),
-                device=device,
-            )
-            _, z_poor = train_gae(
-                gae_poor, graph_poor.node_features, graph_poor.edge_index,
-                lr=gae_cfg.get("lr", 1e-3),
-                weight_decay=gae_cfg.get("weight_decay", 1e-4),
-                max_epochs=gae_cfg.get("max_epochs", 300),
-                patience=gae_cfg.get("patience", 30),
-                device=device,
-            )
+            # Optional non-negativity: ReLU on embeddings before shift
+            if nonneg_embedding:
+                z_good = np.maximum(z_good, 0.0)
+                z_poor = np.maximum(z_poor, 0.0)
 
-            # Compute shift and KNN residual
+            # Compute shift; KNN residual only if not already aligned by shared encoder
             raw_shift = compute_embedding_shift(z_good, z_poor, normalize=True)
-            residual = knn_residual_correction(raw_shift, k=knn_k)
+            if skip_knn or shared_encoder:
+                residual = raw_shift
+            else:
+                residual = knn_residual_correction(raw_shift, k=knn_k)
             modality_residuals[mod_name] = residual
 
         # Step 6: Fuse multi-omics shifts
@@ -213,6 +255,7 @@ def run_cross_validation(
 
         fold_metrics = evaluate_predictions(test_labels, test_probs)
         result.fold_metrics.append(fold_metrics)
+        result.fold_selected_indices.append([int(i) for i in selected_indices])
         logger.info(
             "Fold %d: AUC=%.3f, F1=%.3f", fold_idx + 1,
             fold_metrics.auc_roc, fold_metrics.f1,

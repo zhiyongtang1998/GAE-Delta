@@ -133,7 +133,22 @@ class OutcomeGraphBuilder:
                 weight_list.extend([pcc, pcc])
         edge_index = np.array([src_list, dst_list], dtype=np.int64)
         edge_weight = np.array(weight_list, dtype=np.float32)
-        if len(src_list) == 0:
+        if len(src_list) == 0 and self.fi_edges.shape[0] > 0:
+            # Fallback: keep top-K FI edges by |corr| so GAE training doesn't crash on empty graph
+            # (happens on single-cell where |PCC| > threshold filter is too strict)
+            n_fi = self.fi_edges.shape[0]
+            corr_vals = np.abs([float(corr_matrix[int(self.fi_edges[i,0]), int(self.fi_edges[i,1])]) for i in range(n_fi)])
+            corr_vals = np.nan_to_num(corr_vals, nan=0.0)
+            k = min(100, n_fi)
+            top_k = np.argsort(-corr_vals)[:k]
+            src_list, dst_list, weight_list = [], [], []
+            for i in top_k:
+                a, b = int(self.fi_edges[i,0]), int(self.fi_edges[i,1])
+                w = float(corr_vals[i]) if corr_vals[i] > 0 else 1e-3
+                src_list.extend([a, b]); dst_list.extend([b, a]); weight_list.extend([w, w])
+            edge_index = np.array([src_list, dst_list], dtype=np.int64)
+            edge_weight = np.array(weight_list, dtype=np.float32)
+        elif len(src_list) == 0:
             edge_index = np.empty((2, 0), dtype=np.int64)
             edge_weight = np.empty(0, dtype=np.float32)
         return edge_index, edge_weight

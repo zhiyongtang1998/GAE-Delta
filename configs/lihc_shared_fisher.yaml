@@ -1,0 +1,30 @@
+seed: 42
+device: auto
+n_folds: 10
+n_top_genes: 100
+modalities: [rna, methylation, cnv]
+data:
+  hdf5_path: ${oc.env:GAE_DELTA_DATA_PATH}
+  fi_network_path: ${oc.env:GAE_DELTA_FI_PATH}
+  output_dir: ${oc.env:GAE_DELTA_OUTPUT_DIR}
+  cache_dir: .cache
+model:
+  gae:
+    encoder: {in_channels: 4, hidden_channels: 32, out_channels: 16, dropout: 0.3}
+    training: {lr: 1.0e-3, weight_decay: 1.0e-4, max_epochs: 300, patience: 30, val_edge_ratio: 0.1, neg_sampling_ratio: 1.0}
+  mlp:
+    architecture: {input_dim: 48, hidden_dim: 64, output_dim: 1, dropout: 0.3}
+    training: {lr: 1.0e-3, weight_decay: 1.0e-4, max_epochs: 200, patience: 20, batch_size: 32}
+experiment:
+  graph:
+    pcc_threshold: 0.5
+    min_node_degree: 1
+    use_fisher_z: true
+    fisher_q: 0.1
+  shift:
+    knn_k: 15
+    normalize_embeddings: true
+    shared_encoder: true
+    skip_knn: true
+  selection: {method: isolation_forest, n_estimators: 500, max_samples: 256, contamination: auto, random_state: 42}
+  cross_validation: {n_folds: 10, stratified: true, train_val_split: 0.8}

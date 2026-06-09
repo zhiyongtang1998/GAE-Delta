@@ -79,6 +79,9 @@ class OutcomeGAE(nn.Module):
             )
         neg_scores = self.decoder(z, neg_edge_index, sigmoid=True)
 
+        eps = 1e-7
+        pos_scores = torch.nan_to_num(pos_scores, nan=0.5).clamp(eps, 1 - eps)
+        neg_scores = torch.nan_to_num(neg_scores, nan=0.5).clamp(eps, 1 - eps)
         pos_loss = F.binary_cross_entropy(pos_scores, torch.ones_like(pos_scores))
         neg_loss = F.binary_cross_entropy(neg_scores, torch.zeros_like(neg_scores))
 
@@ -177,5 +180,81 @@ def train_gae(
     model.eval()
     with torch.no_grad():
         embeddings = model.encode(x.to(device), edge_index.to(device)).cpu().numpy()
+    embeddings = np.nan_to_num(embeddings, nan=0.0, posinf=0.0, neginf=0.0)
 
     return model, embeddings
+
+
+def train_shared_gae(
+    model: "OutcomeGAE",
+    x_good: torch.Tensor, edge_good: torch.LongTensor,
+    x_poor: torch.Tensor, edge_poor: torch.LongTensor,
+    lr: float = 1e-3,
+    weight_decay: float = 1e-4,
+    max_epochs: int = 300,
+    patience: int = 30,
+    val_edge_ratio: float = 0.1,
+    device: str = "cpu",
+) -> Tuple["OutcomeGAE", np.ndarray, np.ndarray]:
+    """Train ONE GAE jointly on both group-specific graphs.
+
+    Returns shared model + (z_good, z_poor) on the SAME latent space.
+    No KNN residual correction needed downstream — latent alignment is by construction.
+    """
+    model = model.to(device)
+    x_good = x_good.to(device); edge_good = edge_good.to(device)
+    x_poor = x_poor.to(device); edge_poor = edge_poor.to(device)
+
+    def split_edges(edge_index):
+        n_edges = edge_index.size(1) // 2
+        perm = torch.randperm(n_edges)
+        n_val = max(1, int(n_edges * val_edge_ratio))
+        n_train = n_edges - n_val
+        all_src = edge_index[0, :n_edges * 2:2]
+        all_dst = edge_index[1, :n_edges * 2:2]
+        tr_src = all_src[perm[:n_train]]; tr_dst = all_dst[perm[:n_train]]
+        va_src = all_src[perm[n_train:]]; va_dst = all_dst[perm[n_train:]]
+        tr_edge = to_undirected(torch.stack([tr_src, tr_dst], dim=0))
+        va_edge = torch.stack([va_src, va_dst], dim=0)
+        return tr_edge.to(device), va_edge.to(device)
+
+    tr_good, va_good = split_edges(edge_good)
+    tr_poor, va_poor = split_edges(edge_poor)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    best_val = float("inf"); best_state = None; wait = 0
+
+    for epoch in range(max_epochs):
+        model.train()
+        optimizer.zero_grad()
+        z_g = model.encode(x_good, tr_good)
+        z_p = model.encode(x_poor, tr_poor)
+        loss = model.recon_loss(z_g, tr_good) + model.recon_loss(z_p, tr_poor)
+        loss.backward()
+        optimizer.step()
+
+        model.eval()
+        with torch.no_grad():
+            zg_v = model.encode(x_good, tr_good)
+            zp_v = model.encode(x_poor, tr_poor)
+            v_loss = (model.recon_loss(zg_v, va_good).item() +
+                      model.recon_loss(zp_v, va_poor).item())
+        if v_loss < best_val:
+            best_val = v_loss
+            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+            wait = 0
+        else:
+            wait += 1
+            if wait >= patience:
+                logger.info("Shared-encoder early stop at epoch %d (val_loss=%.4f)", epoch, best_val)
+                break
+
+    if best_state: model.load_state_dict(best_state)
+    model = model.to(device)
+    model.eval()
+    with torch.no_grad():
+        z_good = model.encode(x_good, edge_good).cpu().numpy()
+        z_poor = model.encode(x_poor, edge_poor).cpu().numpy()
+    z_good = np.nan_to_num(z_good, nan=0.0, posinf=0.0, neginf=0.0)
+    z_poor = np.nan_to_num(z_poor, nan=0.0, posinf=0.0, neginf=0.0)
+    return model, z_good, z_poor
