@@ -1,0 +1,23 @@
+{
+  "title": "GAE-Δ: Phenotype-Specific Gene Role Shifts in Multi-Omics Data via Graph Autoencoder Embedding Differences",
+  "description": "GAE-Δ trains group-specific graph autoencoders on phenotype-stratified gene interaction networks and uses the difference between the learned gene embeddings to identify genes whose network role shifts between phenotypic groups, integrating RNA-seq, DNA methylation, and CNV via late fusion.",
+  "upload_type": "software",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {"name": "Tang, Zhiyong"},
+    {"name": "Chen, Zhe"},
+    {"name": "Chen, Mengting"},
+    {"name": "Ewing, Rob"},
+    {"name": "Niranjan, Mahesan"},
+    {"name": "Ennis, Sarah"},
+    {"name": "Wang, Yihua"}
+  ],
+  "keywords": [
+    "multi-omics",
+    "graph autoencoder",
+    "cancer genomics",
+    "gene regulatory networks",
+    "bioinformatics"
+  ]
+}

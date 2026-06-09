@@ -20,6 +20,16 @@ requires-python = ">=3.9"
 authors = [
     {name = "GAE-Delta Authors"},
 ]
+keywords = ["multi-omics", "graph-autoencoder", "cancer-genomics", "bioinformatics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
 # Lower bounds only — the project runs on the current scientific Python stack
 # (verified against torch 2.8 / numpy 2.0). No artificial upper caps.
 dependencies = [
@@ -34,6 +44,11 @@ dependencies = [
     "omegaconf>=2.3",
     "tqdm",
 ]
+
+[project.urls]
+Homepage = "https://github.com/zhiyongtang1998/GAE-Delta"
+Repository = "https://github.com/zhiyongtang1998/GAE-Delta"
+Issues = "https://github.com/zhiyongtang1998/GAE-Delta/issues"
 
 [project.scripts]
 gae-delta = "gae_delta.pipeline.runner:main"

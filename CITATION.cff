@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: "If you use GAE-Δ in your research, please cite both the software and the article below."
+title: "GAE-Δ: Phenotype-Specific Gene Role Shifts in Multi-Omics Data via Graph Autoencoder Embedding Differences"
+abstract: >-
+  GAE-Δ trains group-specific graph autoencoders on phenotype-stratified gene
+  interaction networks and uses the difference between the learned gene
+  embeddings to identify genes whose network role shifts between phenotypic
+  groups, integrating RNA-seq, DNA methylation, and CNV via late fusion.
+type: software
+license: MIT
+repository-code: "https://github.com/zhiyongtang1998/GAE-Delta"
+authors:
+  - family-names: Tang
+    given-names: Zhiyong
+  - family-names: Chen
+    given-names: Zhe
+  - family-names: Chen
+    given-names: Mengting
+  - family-names: Ewing
+    given-names: Rob
+  - family-names: Niranjan
+    given-names: Mahesan
+  - family-names: Ennis
+    given-names: Sarah
+  - family-names: Wang
+    given-names: Yihua
+keywords:
+  - multi-omics
+  - graph autoencoder
+  - cancer genomics
+  - gene regulatory networks
+  - bioinformatics
+preferred-citation:
+  type: article
+  title: "GAE-Δ: Phenotype-Specific Gene Role Shifts in Multi-Omics Data via Graph Autoencoder Embedding Differences"
+  authors:
+    - family-names: Tang
+      given-names: Zhiyong
+    - family-names: Chen
+      given-names: Zhe
+    - family-names: Chen
+      given-names: Mengting
+    - family-names: Ewing
+      given-names: Rob
+    - family-names: Niranjan
+      given-names: Mahesan
+    - family-names: Ennis
+      given-names: Sarah
+    - family-names: Wang
+      given-names: Yihua
+  journal: "Bioinformatics"
+  publisher:
+    name: "Oxford University Press"
+  year: 2026

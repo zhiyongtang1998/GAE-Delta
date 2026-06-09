@@ -1,0 +1,20 @@
+# Ensure the source distribution (sdist) carries everything needed to compile
+# the native extensions from source — otherwise `pip install gae-delta` on a
+# platform without a prebuilt wheel would fail.
+
+include LICENSE README.md pyproject.toml setup.py Makefile environment.yml
+
+# C++ / pybind11 KNN extension sources + headers + CMake (top-level, outside the package)
+recursive-include csrc *.cpp *.h CMakeLists.txt
+
+# Cython sources (the generated *.c is gitignored; Cython regenerates from *.pyx)
+recursive-include gae_delta/core/graph *.pyx
+
+# Hydra config tree and the toy demo dataset
+recursive-include gae_delta/configs *.yaml
+recursive-include data/example *
+
+# Tests
+recursive-include tests *.py
+
+global-exclude *.so *.dylib *.pyd __pycache__/* *.pyc
