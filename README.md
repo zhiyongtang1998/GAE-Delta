@@ -6,9 +6,9 @@
 
 *When genes don't change expression — but change who they talk to*
 
-[![Python 3.9](https://img.shields.io/badge/Python-3.9-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch 1.13](https://img.shields.io/badge/PyTorch-1.13-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![PyG 2.3](https://img.shields.io/badge/PyG-2.3-3C2179?logo=pyg&logoColor=white)](https://pyg.org/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch 2.x](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![PyG 2.5+](https://img.shields.io/badge/PyG-2.5+-3C2179?logo=pyg&logoColor=white)](https://pyg.org/)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 </div>
@@ -84,12 +84,15 @@ GAE-Δ is a general framework applicable to any binary stratification of multi-o
 
 ### Prerequisites
 
-| Dependency | Version |
-|:-----------|:--------|
-| Python | 3.9 |
-| CUDA | 11.7 |
-| CMake | ≥ 3.18 |
-| C++ Compiler | C++17 support |
+| Dependency | Version | Required? |
+|:-----------|:--------|:----------|
+| Python | ≥ 3.10 | yes |
+| PyTorch | ≥ 2.0 | yes |
+| PyG | ≥ 2.5 | yes |
+| C++ Compiler | C++17 | only to build the optional native speedups |
+| CUDA | ≥ 11.8 | optional — GPU only; CPU works out of the box |
+
+> The Cython (PCC/adjacency) and C++ (KNN) extensions are **performance optimizations only** — the package runs correctly on pure NumPy / scikit-learn fallbacks if they are not compiled.
 
 ### Build & Install
 
@@ -107,7 +110,7 @@ pip install .
 ### Run with toy data
 
 ```bash
-python -m gae_delta.pipeline.runner \
+gae-delta \
     data.hdf5_path=data/example/toy_demo.h5 \
     data.fi_network_path=data/example/toy_fi_network.txt
 ```
@@ -115,7 +118,7 @@ python -m gae_delta.pipeline.runner \
 ### Run with real TCGA data
 
 ```bash
-python -m gae_delta.pipeline.runner \
+gae-delta \
     data.hdf5_path=/path/to/your/cancer_data.h5 \
     data.fi_network_path=/path/to/FI_network.txt \
     n_folds=10 \
@@ -163,7 +166,7 @@ GAE-Δ uses [Hydra](https://hydra.cc/) for configuration management. Override an
 
 ```bash
 # Custom hyperparameters
-python -m gae_delta.pipeline.runner \
+gae-delta \
     model.gae.encoder.out_channels=32 \
     model.mlp.architecture.hidden_dim=128 \
     experiment.graph.pcc_threshold=0.4 \
@@ -171,7 +174,7 @@ python -m gae_delta.pipeline.runner \
 
 # Environment variables also work
 export GAE_DELTA_DATA_PATH=/data/tcga/lihc.h5
-python -m gae_delta.pipeline.runner
+gae-delta
 ```
 
 ## 🧪 Testing
