@@ -20,7 +20,7 @@ def resolve_device(cfg_device: str) -> str:
     return cfg_device
 
 
-@hydra.main(version_base=None, config_path="../../configs", config_name="config")
+@hydra.main(version_base=None, config_path="../configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     """Run the GAE-Δ cross-validation pipeline."""
     from gae_delta.utils.logging import setup_logging

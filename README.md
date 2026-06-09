@@ -98,11 +98,11 @@ GAE-Δ is a general framework applicable to any binary stratification of multi-o
 conda env create -f environment.yml
 conda activate gae-delta
 
-# 2. Build native extensions + install
-make all
+# 2. Install (compiles all native extensions automatically)
+pip install .
 ```
 
-> **Note:** `make all` compiles Cython extensions (PCC, adjacency), C++ KNN extension (pybind11), and installs the package. Requires CMake and a C++17 compiler.
+> **Note:** `pip install .` now builds **all** native extensions — the Cython PCC/adjacency modules and the C++ KNN extension (pybind11) — in a single step; no separate `make` is required. A C++17 compiler is needed. `make all` remains available for an in-place editable dev build.
 
 ### Run with toy data
 
@@ -135,8 +135,8 @@ GAE-Delta/
 │   │   └── selection/       # Isolation Forest gene ranking
 │   ├── data/                # HDF5 loader + omics preprocessing
 │   ├── pipeline/            # 5-stage pipeline + Hydra runner
-│   └── evaluation/          # 10-fold CV + metrics
-├── configs/                 # Hydra YAML configs
+│   ├── evaluation/          # 10-fold CV + metrics
+│   └── configs/             # Hydra YAML configs (shipped inside the wheel)
 ├── data/example/            # Toy demo dataset
 └── tests/
 ```

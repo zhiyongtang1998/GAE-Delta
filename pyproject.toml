@@ -4,6 +4,7 @@ requires = [
     "wheel",
     "Cython>=0.29.30",
     "numpy>=1.24.0",
+    "pybind11>=2.10.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -13,22 +14,29 @@ dynamic = ["version"]
 description = "GAE-Δ: Phenotype-specific gene role shifts in multi-omics data via graph autoencoder embedding differences"
 readme = "README.md"
 license = {text = "CC-BY-NC-ND-4.0"}
-requires-python = ">=3.9,<3.10"
+requires-python = ">=3.9,<3.11"
 authors = [
     {name = "GAE-Delta Authors"},
 ]
 dependencies = [
+    # torch/torch-geometric are kept conservatively pinned: torch 1.13 is the
+    # last 1.x release and locks the rest of the stack (Python <=3.10, PyG <2.4).
+    # Moving to torch 2.x is a separate, tested migration — do NOT widen blindly.
     "torch>=1.13.0,<2.0.0",
     "torch-geometric>=2.3.0,<2.4.0",
-    "numpy>=1.24.0,<1.25.0",
-    "scipy>=1.10.0,<1.11.0",
-    "scikit-learn>=1.2.0,<1.3.0",
-    "pandas>=2.0.0,<2.1.0",
+    # numpy <2.0: the compiled Cython extensions build against the numpy ABI.
+    "numpy>=1.24.0,<2.0.0",
+    "scipy>=1.10.0",
+    "scikit-learn>=1.2.0",
+    "pandas>=2.0.0",
     "h5py>=3.8.0",
     "hydra-core>=1.3.0",
     "omegaconf>=2.3.0",
     "tqdm",
 ]
+
+[project.scripts]
+gae-delta = "gae_delta.pipeline.runner:main"
 
 [project.optional-dependencies]
 dev = [
@@ -45,3 +53,8 @@ version = {attr = "gae_delta._version.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["gae_delta*"]
+
+# Ship the Hydra config tree inside the wheel so the installed `gae-delta`
+# command can locate configs/ relative to the package (see runner.py).
+[tool.setuptools.package-data]
+gae_delta = ["configs/*.yaml", "configs/**/*.yaml"]
