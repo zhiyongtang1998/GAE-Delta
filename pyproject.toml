@@ -58,3 +58,18 @@ include = ["gae_delta*"]
 # command can locate configs/ relative to the package (see runner.py).
 [tool.setuptools.package-data]
 gae_delta = ["configs/*.yaml", "configs/**/*.yaml"]
+
+[tool.cibuildwheel]
+# Build CPython wheels only; skip PyPy, musllinux, and 32-bit targets.
+skip = "pp* *-musllinux_* *_i686 *-win32"
+build-verbosity = 1
+# No in-CI test step: installing the wheel would pull in torch / torch-geometric
+# (very heavy, and not needed to validate the compiled extensions). Run the test
+# suite separately (`make test`) in a full environment.
+
+[tool.cibuildwheel.macos]
+# Build for both Intel and Apple Silicon.
+archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]

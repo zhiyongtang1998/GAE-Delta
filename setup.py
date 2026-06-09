@@ -6,8 +6,18 @@ All native extensions (Cython PCC/adjacency + C++ KNN) are compiled as part of
 ``make all`` remains available for an in-place editable build during development.
 """
 import os
+import sys
 
 from setuptools import setup, Extension
+
+# Optimization flags differ between MSVC and GCC/Clang. Hardcoding GCC flags
+# (e.g. -O3 / -ffast-math) breaks the build under MSVC on Windows.
+#
+# We intentionally avoid -march=native: it bakes the build host's instruction
+# set into the binary and breaks portable wheels on other machines.
+_IS_MSVC = sys.platform == "win32"
+OPT_FLAGS = ["/O2"] if _IS_MSVC else ["-O3"]
+FASTMATH_FLAGS = (["/O2", "/fp:fast"] if _IS_MSVC else ["-O3", "-ffast-math"])
 
 # ---------------------------------------------------------------------------
 # Cython extensions (with pre-generated .c fallback)
@@ -29,14 +39,14 @@ if USE_CYTHON:
             "gae_delta.core.graph._correlation",
             sources=["gae_delta/core/graph/_correlation.pyx"],
             include_dirs=[np.get_include()],
-            extra_compile_args=["-O3", "-ffast-math"],
+            extra_compile_args=FASTMATH_FLAGS,
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
         Extension(
             "gae_delta.core.graph._adjacency",
             sources=["gae_delta/core/graph/_adjacency.pyx"],
             include_dirs=[np.get_include()],
-            extra_compile_args=["-O3"],
+            extra_compile_args=OPT_FLAGS,
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
     ]
@@ -58,7 +68,7 @@ else:
                 "gae_delta.core.graph._correlation",
                 sources=["gae_delta/core/graph/_correlation.c"],
                 include_dirs=inc,
-                extra_compile_args=["-O3", "-ffast-math"],
+                extra_compile_args=FASTMATH_FLAGS,
             )
         )
     if os.path.exists("gae_delta/core/graph/_adjacency.c"):
@@ -67,16 +77,13 @@ else:
                 "gae_delta.core.graph._adjacency",
                 sources=["gae_delta/core/graph/_adjacency.c"],
                 include_dirs=inc,
-                extra_compile_args=["-O3"],
+                extra_compile_args=OPT_FLAGS,
             )
         )
 
 # ---------------------------------------------------------------------------
 # C++ / pybind11 KNN extension
 # ---------------------------------------------------------------------------
-# Note: we intentionally do NOT pass ``-march=native``. It would bake the build
-# host's CPU instruction set into the binary, which breaks portable wheels on
-# other machines. ``-O3`` is enough; let cibuildwheel target a safe baseline.
 try:
     from pybind11.setup_helpers import Pybind11Extension
 
@@ -89,7 +96,7 @@ try:
             ],
             include_dirs=["csrc/include"],
             cxx_std=17,
-            extra_compile_args=["-O3"],
+            extra_compile_args=OPT_FLAGS,
         )
     )
 except ImportError:
