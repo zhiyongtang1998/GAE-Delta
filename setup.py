@@ -15,9 +15,21 @@ from setuptools import setup, Extension
 #
 # We intentionally avoid -march=native: it bakes the build host's instruction
 # set into the binary and breaks portable wheels on other machines.
+#
+# IMPORTANT: these MUST return *fresh* lists per call. Pybind11Extension(cxx_std=)
+# mutates the extension's extra_compile_args in place to add -std=c++17; if a
+# single shared list object were passed to both the C++ extension and a Cython C
+# extension, that C++ flag would leak onto the C build and fail under clang
+# ("-std=c++17 not allowed with 'C'").
 _IS_MSVC = sys.platform == "win32"
-OPT_FLAGS = ["/O2"] if _IS_MSVC else ["-O3"]
-FASTMATH_FLAGS = (["/O2", "/fp:fast"] if _IS_MSVC else ["-O3", "-ffast-math"])
+
+
+def opt_flags():
+    return ["/O2"] if _IS_MSVC else ["-O3"]
+
+
+def fastmath_flags():
+    return ["/O2", "/fp:fast"] if _IS_MSVC else ["-O3", "-ffast-math"]
 
 # ---------------------------------------------------------------------------
 # Cython extensions (with pre-generated .c fallback)
@@ -39,14 +51,14 @@ if USE_CYTHON:
             "gae_delta.core.graph._correlation",
             sources=["gae_delta/core/graph/_correlation.pyx"],
             include_dirs=[np.get_include()],
-            extra_compile_args=FASTMATH_FLAGS,
+            extra_compile_args=fastmath_flags(),
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
         Extension(
             "gae_delta.core.graph._adjacency",
             sources=["gae_delta/core/graph/_adjacency.pyx"],
             include_dirs=[np.get_include()],
-            extra_compile_args=OPT_FLAGS,
+            extra_compile_args=opt_flags(),
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
     ]
@@ -68,7 +80,7 @@ else:
                 "gae_delta.core.graph._correlation",
                 sources=["gae_delta/core/graph/_correlation.c"],
                 include_dirs=inc,
-                extra_compile_args=FASTMATH_FLAGS,
+                extra_compile_args=fastmath_flags(),
             )
         )
     if os.path.exists("gae_delta/core/graph/_adjacency.c"):
@@ -77,7 +89,7 @@ else:
                 "gae_delta.core.graph._adjacency",
                 sources=["gae_delta/core/graph/_adjacency.c"],
                 include_dirs=inc,
-                extra_compile_args=OPT_FLAGS,
+                extra_compile_args=opt_flags(),
             )
         )
 
@@ -96,7 +108,7 @@ try:
             ],
             include_dirs=["csrc/include"],
             cxx_std=17,
-            extra_compile_args=OPT_FLAGS,
+            extra_compile_args=opt_flags(),
         )
     )
 except ImportError:
